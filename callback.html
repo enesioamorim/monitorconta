@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Authorization — MonitorContas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+    .card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 2.5rem; max-width: 560px; width: 100%; text-align: center; }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+    .code-box { background: #0a0a0a; border: 1px solid #333; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; text-align: left; }
+    .code-label { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .code-value { font-family: 'Courier New', monospace; font-size: 0.85rem; color: #00f2ea; word-break: break-all; line-height: 1.5; }
+    .code-value.empty { color: #444; font-style: italic; }
+    .copy-btn { background: linear-gradient(135deg, #ff0050, #ff4080); border: none; color: #fff; padding: 0.75rem 2rem; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; width: 100%; }
+    .copy-btn:hover { opacity: 0.85; }
+    .copy-btn:disabled { background: #333; color: #555; cursor: default; }
+    .status { margin-top: 1rem; font-size: 0.85rem; color: #555; }
+    .status.success { color: #00f2ea; }
+    .status.error { color: #ff0050; }
+    .back { margin-top: 2rem; color: #444; text-decoration: none; font-size: 0.85rem; }
+    .back:hover { color: #fff; }
+    .params { margin-top: 1.5rem; text-align: left; }
+    .param-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #1a1a1a; font-size: 0.82rem; }
+    .param-key { color: #555; }
+    .param-val { color: #aaa; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon" id="icon">⏳</div>
+    <h1 id="title">Processing authorization...</h1>
+    <p class="subtitle" id="subtitle">Reading TikTok callback parameters</p>
+
+    <div class="code-box">
+      <div class="code-label">Authorization Code</div>
+      <div class="code-value empty" id="code-display">Waiting...</div>
+    </div>
+
+    <button class="copy-btn" id="copy-btn" disabled onclick="copyCode()">Copy Code</button>
+    <p class="status" id="status"></p>
+
+    <div class="params" id="params"></div>
+
+    <a class="back" href="index.html">← Back to MonitorContas</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+    const errorDesc = params.get('error_description');
+
+    const icon = document.getElementById('icon');
+    const title = document.getElementById('title');
+    const subtitle = document.getElementById('subtitle');
+    const codeDisplay = document.getElementById('code-display');
+    const copyBtn = document.getElementById('copy-btn');
+    const statusEl = document.getElementById('status');
+    const paramsEl = document.getElementById('params');
+
+    if (error) {
+      icon.textContent = '❌';
+      title.textContent = 'Authorization failed';
+      subtitle.textContent = error;
+      codeDisplay.textContent = errorDesc || 'No details provided';
+      codeDisplay.classList.add('empty');
+      statusEl.textContent = 'Please try again.';
+      statusEl.className = 'status error';
+    } else if (code) {
+      icon.textContent = '✅';
+      title.textContent = 'Authorization successful!';
+      subtitle.textContent = 'Copy the code below to use in your app';
+      codeDisplay.textContent = code;
+      codeDisplay.classList.remove('empty');
+      copyBtn.disabled = false;
+
+      // Show all params
+      let html = '';
+      params.forEach((val, key) => {
+        if (key !== 'code') {
+          html += `<div class="param-row"><span class="param-key">${key}</span><span class="param-val">${val}</span></div>`;
+        }
+      });
+      if (html) paramsEl.innerHTML = html;
+    } else {
+      icon.textContent = '⚠️';
+      title.textContent = 'No authorization code found';
+      subtitle.textContent = 'This page should be reached after TikTok login';
+      codeDisplay.textContent = 'No code in URL parameters';
+      codeDisplay.classList.add('empty');
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(code).then(() => {
+        copyBtn.textContent = '✓ Copied!';
+        statusEl.textContent = 'Code copied to clipboard!';
+        statusEl.className = 'status success';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Code';
+          statusEl.textContent = '';
+        }, 3000);
+      });
+    }
+  </script>
+</body>
+</html>
